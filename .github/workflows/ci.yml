@@ -32,7 +32,7 @@ jobs:
 
   check:
     needs: [auto-approve]
-    if: ${{ needs.auto-approve.outputs.auto_approve == 'true' }}
+    if: ${{ github.event_name == 'push' || needs.auto-approve.outputs.auto_approve == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed }}
