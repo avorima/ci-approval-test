@@ -17,7 +17,7 @@ jobs:
   auto-approve:
     runs-on: ubuntu-latest
     outputs:
-      auto_approve: ${{ steps.check.outputs.needs_approval }}
+      auto_approve: ${{ steps.check.outputs.auto_approve }}
     steps:
       - id: check
         run: |
@@ -38,15 +38,12 @@ jobs:
 
   check:
     needs: [auto-approve]
-    # if: ${{ needs.auto-approve.outputs.auto_approve }}
+    if: ${{ needs.auto-approve.outputs.auto_approve }}
     runs-on: ubuntu-latest
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed }}
       build_changed: ${{ steps.build.outputs.any_changed }}
     steps:
-      - run: echo "$NEEDS"
-        env:
-          NEEDS: ${{ toJSON(needs) }}
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
