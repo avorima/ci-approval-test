@@ -69,6 +69,8 @@ jobs:
     if: needs.check.outputs.test_changed
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Run test
         run: |
           for script in test/*; do
@@ -80,6 +82,8 @@ jobs:
     if: needs.check.outputs.build_changed
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Run build
         run: |
           for script in build/*; do
