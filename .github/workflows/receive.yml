@@ -1,0 +1,14 @@
+name: Receive PR
+
+on:
+  pull_request_target:
+    branches:
+      - "*"
+
+jobs:
+  confirm:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}"
+    environment: test
+    steps:
+      - run: ":"
