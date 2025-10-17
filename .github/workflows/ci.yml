@@ -20,7 +20,9 @@ jobs:
   dump:
     runs-on: ubuntu-latest
     steps:
-      - run: echo ${{ toJSON(github) }}
+      - run: echo "$EVENT"
+        env:
+          EVENT: ${{ toJSON(github) }}
 
   check:
     if: ${{ !cancelled() }}
