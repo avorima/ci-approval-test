@@ -11,11 +11,16 @@ on:
 
 jobs:
   confirm:
-    if: github.event_name == 'pull_request_target'
+    if: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository }}
     environment: test
     runs-on: ubuntu-latest
     steps:
       - run: ":"
+
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ toJSON(github) }}
 
   check:
     if: ${{ !cancelled() }}
@@ -29,7 +34,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 2
-          ref: ${{ github.event.pull_request_target.head.sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Detect test file changes
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
         id: test
