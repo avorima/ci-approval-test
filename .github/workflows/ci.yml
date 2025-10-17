@@ -34,7 +34,7 @@ jobs:
 
   check:
     needs: [auto-approve]
-    if: ${{ needs.auto-approve.outputs.auto_approve }}
+    if: ${{ needs.auto-approve.outputs.auto_approve == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed }}
@@ -62,7 +62,7 @@ jobs:
 
   test:
     needs: [check]
-    if: needs.check.outputs.test_changed
+    if: ${{ needs.check.outputs.test_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -75,7 +75,7 @@ jobs:
 
   build:
     needs: [check]
-    if: needs.check.outputs.build_changed
+    if: ${{ needs.check.outputs.build_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
