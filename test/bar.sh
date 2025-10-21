@@ -2,3 +2,4 @@
 
 echo "test bar"
 echo "complete"
+echo
