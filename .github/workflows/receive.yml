@@ -20,7 +20,7 @@ jobs:
           EVENT: ${{ toJSON(github) }}
       - run: |
           if [[ ${LABEL_PRESENT-false} == "false" ]]; then
-            echo "missing 'approve-ci' label
+            echo "missing 'approve-ci' label"
           fi
         env:
           LABEL_PRESENT: ${{ contains(github.event.labels.*.name, 'approve-ci') }}
