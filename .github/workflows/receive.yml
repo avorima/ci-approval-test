@@ -2,13 +2,18 @@ name: Receive PR
 
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
     branches:
       - "*"
 
 jobs:
   confirm:
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+    if: ${{ contains(github.event.labels.*.name, 'approve-ci') }}
     environment: test
     steps:
       - run: echo "$EVENT"
