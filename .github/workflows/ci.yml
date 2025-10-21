@@ -40,7 +40,7 @@ jobs:
               echo "continue=true" >> $GITHUB_OUTPUT
           fi
         env:
-          IS_APPROVED: ${{ contains(github.event.labels.*.name, 'approve-ci') }}
+          IS_APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'approve-ci') }}
 
   check:
     needs: gate
