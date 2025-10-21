@@ -9,22 +9,8 @@ on:
     workflows: ["Receive PR"]
     types:
       - completed
-  pull_request:
-    branches:
-      - "*"
 
 jobs:
-  auto-approve:
-    runs-on: ubuntu-latest
-    outputs:
-      auto_approve: ${{ steps.check.outputs.auto_approve }}}
-    steps:
-      - id: check
-        run:
-          echo "auto_approve=$VALUE" >> $GITHUB_OUTPUT
-        env:
-          VALUE: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-
   dump:
     runs-on: ubuntu-latest
     steps:

@@ -6,7 +6,15 @@ on:
       - "*"
 
 jobs:
-  confirm:
+  auto-approve:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - run: echo "$EVENT"
+        env:
+          EVENT: ${{ toJSON(github) }}
+
+  request-approval:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
     environment: test
