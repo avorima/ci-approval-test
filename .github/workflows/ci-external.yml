@@ -15,13 +15,18 @@ on:
       - main
 
 jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "$EVENT"
+        env:
+          LABELS: ${{ github.event.labels.*.name }}
+          EVENT: ${{ toJSON(github) }}
   gate:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.head.repo.full_name != github.repository && contains(github.event.labels.*.name, 'approve-ci') }}
     steps:
-      - run: echo "$EVENT"
-        env:
-          EVENT: ${{ toJSON(github) }}
+      - run: ":"
 
   check:
     needs: gate
