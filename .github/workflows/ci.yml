@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - release-*
-  workflow_run:
-    workflows: ["Receive PR"]
-    types:
-      - completed
+  pull_request:
+    branches:
+      - "*"
+  pull_request_target:
+    branches:
+      - "*"
 
 jobs:
   dump:
