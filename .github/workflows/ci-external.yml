@@ -16,7 +16,6 @@ jobs:
     steps:
       - run: echo "$EVENT"
         env:
-          LABELS: ${{ github.event.pull_request.labels.*.name }}
           EVENT: ${{ toJSON(github) }}
   gate:
     runs-on: ubuntu-latest
