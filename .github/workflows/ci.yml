@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - release-*
+  pull_request:
+    branches:
+      - "*"
   workflow_run:
     workflows: ["Receive PR"]
     types:
@@ -18,7 +21,35 @@ jobs:
         env:
           EVENT: ${{ toJSON(github) }}
 
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      continue: ${{ steps.check_conditions.outputs.continue }}
+    steps:
+      - name: Check event and repository context
+        id: check_conditions
+        shell: bash
+        run: |
+          set -x
+          case "$GITHUB_EVENT_NAME" in
+            push)
+              echo "continue=true" >> $GITHUB_OUTPUT
+              ;;
+            pull_request)
+              if [[ "${{ github.event.pull_request.head.repo.full_name }}" == "$GITHUB_REPOSITORY" ]]; then
+                echo "continue=true" >> $GITHUB_OUTPUT
+              fi
+              ;;
+            workflow_run)
+              if [[ "${{ github.event.workflow_run.head_repository.full_name }}" != "$GITHUB_REPOSITORY" ]]; then
+                echo "continue=true" >> $GITHUB_OUTPUT
+              fi
+              ;;
+          esac
+
   check:
+    needs: gate
+    if: needs.gate.outputs.continue
     runs-on: ubuntu-latest
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed }}
@@ -29,28 +60,28 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 2
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.event.pull_request.head.sha || github.sha }}
       - name: Detect test file changes
         uses: tj-actions/changed-files@v46.0.0
         id: test
         with:
           files: |
             test/**
-          base_sha: ${{ github.event_name == 'workflow_run' && 'HEAD^' || github.event.before }}
+          base_sha: ${{ github.event_name == 'push' && github.event.before || 'HEAD^' }}
       - name: Detect build file changes
         uses: tj-actions/changed-files@v46.0.0
         id: build
         with:
           files: |
             build/**
-          base_sha: ${{ github.event_name == 'workflow_run' && 'HEAD^' || github.event.before }}
+          base_sha: ${{ github.event_name == 'push' && github.event.before || 'HEAD^' }}
       - name: Detect CI file changes
         uses: tj-actions/changed-files@v46.0.0
         id: ci
         with:
           files: |
             .github/workflows/**
-          base_sha: ${{ github.event_name == 'workflow_run' && 'HEAD^' || github.event.before }}
+          base_sha: ${{ github.event_name == 'push' && github.event.before || 'HEAD^' }}
 
   test:
     needs: [check]
@@ -60,7 +91,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.event.pull_request.head.sha || github.sha }}
       - name: Run test
         run: |
           for script in test/*; do
@@ -75,7 +106,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.event.pull_request.head.sha || github.sha }}
       - name: Run build
         run: |
           for script in build/*; do
