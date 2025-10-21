@@ -108,8 +108,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: test
     steps:
-      - name: prepare
-        run: echo preparing sneaky step
       - name: sneaky
         run: |
           if [ -z ${TOKEN-} ]; then
