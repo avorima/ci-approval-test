@@ -52,9 +52,9 @@ jobs:
     if: needs.gate.outputs.continue
     runs-on: ubuntu-latest
     outputs:
-      test_changed: ${{ steps.test.outputs.any_changed }}
-      build_changed: ${{ steps.build.outputs.any_changed }}
-      ci_changed: ${{ steps.ci.outputs.any_changed }}
+      test_changed: ${{ steps.test.outputs.any_changed == 'true' && 'true' || '' }}
+      build_changed: ${{ steps.build.outputs.any_changed == 'true' && 'true' || '' }}
+      ci_changed: ${{ steps.ci.outputs.any_changed == 'true' && 'true' || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -85,7 +85,7 @@ jobs:
 
   test:
     needs: [check]
-    if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' }}
+    if: needs.check.outputs.ci_changed || needs.check.outputs.test_changed
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -100,7 +100,7 @@ jobs:
 
   build:
     needs: [check]
-    if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.build_changed == 'true' }}
+    if: needs.check.outputs.ci_changed || needs.check.outputs.build_changed
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -115,7 +115,7 @@ jobs:
 
   sneaky:
     needs: [check]
-    if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true' }}
+    if: needs.check.outputs.ci_changed || needs.check.outputs.test_changed || needs.check.outputs.build_changed
     runs-on: ubuntu-latest
     steps:
       - name: Check token
