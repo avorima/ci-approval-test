@@ -19,8 +19,6 @@ jobs:
           EVENT: ${{ toJSON(github) }}
 
   check:
-    needs: [auto-approve]
-    if: ${{ needs.auto-approve.outputs.auto_approve == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed }}
