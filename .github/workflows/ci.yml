@@ -39,6 +39,7 @@ jobs:
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed }}
       build_changed: ${{ steps.build.outputs.any_changed }}
+      ci_changed: ${{ steps.ci.outputs.any_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -51,18 +52,25 @@ jobs:
         with:
           files: |
             test/**
-          base_sha: ${{ github.event_name == 'pull_request_target' && 'HEAD^' || github.event.before }}
+          base_sha: ${{ github.event_name == 'pull_request' && 'HEAD^' || github.event.before }}
       - name: Detect build file changes
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
         id: build
         with:
           files: |
             build/**
-          base_sha: ${{ github.event_name == 'pull_request_target' && 'HEAD^' || github.event.before }}
+          base_sha: ${{ github.event_name == 'pull_request' && 'HEAD^' || github.event.before }}
+      - name: Detect CI file changes
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        id: ci
+        with:
+          files: |
+            .github/workflows/**
+          base_sha: ${{ github.event_name == 'pull_request' && 'HEAD^' || github.event.before }}
 
   test:
     needs: [check]
-    if: ${{ needs.check.outputs.test_changed == 'true' }}
+    if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -75,7 +83,7 @@ jobs:
 
   build:
     needs: [check]
-    if: ${{ needs.check.outputs.build_changed == 'true' }}
+    if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.build_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
