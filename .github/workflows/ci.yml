@@ -5,9 +5,6 @@ on:
     branches:
       - main
       - release-*
-  pull_request:
-    branches:
-      - "*"
   workflow_run:
     workflows: ["Receive PR"]
     types:
@@ -32,28 +29,28 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 2
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Detect test file changes
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        uses: tj-actions/changed-files@v46.0.0
         id: test
         with:
           files: |
             test/**
-          base_sha: ${{ github.event_name == 'pull_request' && 'HEAD^' || github.event.before }}
+          base_sha: ${{ github.event_name == 'workflow_run' && 'HEAD^' || github.event.before }}
       - name: Detect build file changes
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        uses: tj-actions/changed-files@v46.0.0
         id: build
         with:
           files: |
             build/**
-          base_sha: ${{ github.event_name == 'pull_request' && 'HEAD^' || github.event.before }}
+          base_sha: ${{ github.event_name == 'workflow_run' && 'HEAD^' || github.event.before }}
       - name: Detect CI file changes
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        uses: tj-actions/changed-files@v46.0.0
         id: ci
         with:
           files: |
             .github/workflows/**
-          base_sha: ${{ github.event_name == 'pull_request' && 'HEAD^' || github.event.before }}
+          base_sha: ${{ github.event_name == 'workflow_run' && 'HEAD^' || github.event.before }}
 
   test:
     needs: [check]
@@ -86,7 +83,8 @@ jobs:
     if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Check token
+        run: |
           if [ -z ${TOKEN-} ]; then
             echo "missing token"
             exit 1
