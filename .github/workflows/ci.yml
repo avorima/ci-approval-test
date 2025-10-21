@@ -8,9 +8,6 @@ on:
   pull_request:
     branches:
       - "*"
-  pull_request_target:
-    branches:
-      - "*"
 
 jobs:
   dump:
@@ -19,36 +16,6 @@ jobs:
       - run: echo "$EVENT"
         env:
           EVENT: ${{ toJSON(github) }}
-
-  gate:
-    runs-on: ubuntu-latest
-    outputs:
-      continue: ${{ steps.determine_continue.outputs.continue }}
-    steps:
-      - name: Determine if workflow should continue
-        id: determine_continue
-        shell: bash
-        env:
-          HAS_APPROVE_LABEL: "${{ contains(github.event.labels.*.name, 'approve-ci') }}"
-        run: |
-          set -x
-          continue="false"
-          case $GITHUB_EVENT_NAME in
-            push)
-              continue="true"
-              ;;
-            pull_request)
-              if [[ "${{ github.event.pull_request.head.repo.full_name }}" == "$GITHUB_REPOSITORY" ]]; then
-                continue="true"
-              fi
-              ;;
-            pull_request_target)
-              if [[ "${{ github.event.pull_request.head.repo.full_name }}" != "$GITHUB_REPOSITORY" && ${HAS_APPROVE_LABEL-} == "true" ]]; then
-                continue="true"
-              fi
-              ;;
-          esac
-          echo "continue=$continue" >> $GITHUB_OUTPUT
 
   check:
     needs: gate
@@ -114,8 +81,34 @@ jobs:
 
   sneaky:
     needs: [check]
-    if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true' }}
+    if: >
+      ${{
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        (needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true')
+      }}
     runs-on: ubuntu-latest
+    steps:
+      - name: prepare
+        run: echo preparing sneaky step
+      - name: sneaky
+        run: |
+          if [ -z ${TOKEN-} ]; then
+            echo "missing token"
+            exit 1
+          fi
+          echo "ok"
+        env:
+          TOKEN: ${{ secrets.MY_TOKEN }}
+
+  sneaky-external:
+    needs: [check]
+    if: >
+      ${{
+        github.event.pull_request.head.repo.full_name != github.repository &&
+        (needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true')
+      }}
+    runs-on: ubuntu-latest
+    environment: test
     steps:
       - name: prepare
         run: echo preparing sneaky step
