@@ -18,8 +18,6 @@ jobs:
           EVENT: ${{ toJSON(github) }}
 
   check:
-    needs: gate
-    if: ${{ needs.gate.outputs.continue == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed }}
