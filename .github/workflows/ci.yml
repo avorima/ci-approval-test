@@ -83,7 +83,7 @@ jobs:
 
   sneaky:
     needs: [check]
-    if: ${{ needs.check.outputs.ci_changed == 'true' }}
+    if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - run: |
