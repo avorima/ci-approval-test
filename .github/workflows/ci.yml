@@ -83,7 +83,10 @@ jobs:
     if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: prepare
+        run: echo preparing sneaky step
+      - name: sneaky
+        run: |
           if [ -z ${TOKEN-} ]; then
             echo "missing token"
             exit 1
