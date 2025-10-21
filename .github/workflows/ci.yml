@@ -8,6 +8,14 @@ on:
   pull_request:
     branches:
       - "*"
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+    branches:
+      - main
 
 jobs:
   dump:
@@ -19,17 +27,30 @@ jobs:
 
   gate:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    outputs:
+      continue: ${{ steps.check.outputs.continue }}
     steps:
-      - run: ":"
+      - id: check
+        run: |
+          set -x
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ github.event.pull_request.head.repo.full_name }}" == "$GITHUB_REPOSITORY" ]; then
+              echo "continue=true" >> $GITHUB_OUTPUT
+          fi
+          if [ "$GITHUB_EVENT_NAME" == "pull_request_target" && "${{ github.event.pull_request.head.repo.full_name }}" != "$GITHUB_REPOSITORY" && "$IS_APPROVED" == "true"]; then
+              echo "continue=true" >> $GITHUB_OUTPUT
+          fi
+        env:
+          IS_APPROVED: ${{ contains(github.event.labels.*.name, 'approve-ci') }}
 
   check:
     needs: gate
+    if: needs.gate.outputs.continue
     runs-on: ubuntu-latest
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed == 'true' && 'true' || '' }}
       build_changed: ${{ steps.build.outputs.any_changed == 'true' && 'true' || '' }}
       ci_changed: ${{ steps.ci.outputs.any_changed == 'true' && 'true' || '' }}
+      is_external: ${{ github.event.pull_request.head.repo_full_name != github.repository && 'true' || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -75,7 +96,22 @@ jobs:
 
   build:
     needs: [check]
-    if: needs.check.outputs.ci_changed || needs.check.outputs.build_changed
+    if: needs.check.outputs.is_external && (needs.check.outputs.ci_changed || needs.check.outputs.build_changed)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Run build
+        run: |
+          for script in build/*; do
+            ./$script
+          done
+
+  build-external:
+    needs: [check]
+    if: ${{ !needs.check.outputs.is_external && (needs.check.outputs.ci_changed || needs.check.outputs.build_changed) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
