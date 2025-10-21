@@ -5,13 +5,13 @@ on:
     branches:
       - main
       - release-*
-  pull_request:
-    branches:
-      - "*"
   workflow_run:
     workflows: ["Receive PR"]
     types:
       - completed
+  pull_request:
+    branches:
+      - "*"
 
 jobs:
   auto-approve:
