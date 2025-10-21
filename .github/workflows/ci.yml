@@ -8,6 +8,10 @@ on:
   pull_request:
     branches:
       - "*"
+  workflow_run:
+    workflows: ["Receive PR"]
+    types:
+      - completed
 
 jobs:
   dump:
@@ -79,39 +83,10 @@ jobs:
 
   sneaky:
     needs: [check]
-    if: >
-      ${{
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        (needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true')
-      }}
+    if: ${{ needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: prepare
-        run: echo preparing sneaky step
-      - name: sneaky
-        run: |
-          if [ -z ${TOKEN-} ]; then
-            echo "missing token"
-            exit 1
-          fi
-          echo "ok"
-        env:
-          TOKEN: ${{ secrets.MY_TOKEN }}
-
-  sneaky-external:
-    needs: [check]
-    if: >
-      ${{
-        github.event.pull_request.head.repo.full_name != github.repository &&
-        (needs.check.outputs.ci_changed == 'true' || needs.check.outputs.test_changed == 'true' || needs.check.outputs.build_changed == 'true')
-      }}
-    runs-on: ubuntu-latest
-    environment: test
-    steps:
-      - name: prepare
-        run: echo preparing sneaky step
-      - name: sneaky
-        run: |
+      - run: |
           if [ -z ${TOKEN-} ]; then
             echo "missing token"
             exit 1
