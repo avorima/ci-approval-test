@@ -14,6 +14,17 @@ on:
       - completed
 
 jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    outputs:
+      auto_approve: ${{ steps.check.outputs.auto_approve }}}
+    steps:
+      - id: check
+        run:
+          echo "auto_approve=$VALUE" >> $GITHUB_OUTPUT
+        env:
+          VALUE: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+
   dump:
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +33,8 @@ jobs:
           EVENT: ${{ toJSON(github) }}
 
   check:
+    needs: [auto-approve]
+    if: ${{ needs.auto-approve.outputs.auto_approve == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       test_changed: ${{ steps.test.outputs.any_changed }}
