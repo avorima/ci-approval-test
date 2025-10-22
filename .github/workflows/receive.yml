@@ -22,5 +22,5 @@ jobs:
   run-ci:
     needs: check-external
     if: needs.check-external.outputs.continue
-    uses: Dynatrace/dynatrace-operator/.github/workflows/ci.yml@main
+    uses: ./.github/workflows/ci.yml
     secrets: inherit
