@@ -10,14 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
     environment: test
+    outputs:
+      continue: ${{ steps.mark.outputs.continue }}
     steps:
       - run: echo "$EVENT"
         env:
           EVENT: ${{ toJSON(github) }}
+      - id: mark
+        run: echo "continue=true" >> $GITHUB_OUTPUT
 
   run-ci:
     needs: check-external
-    runs-on: ubuntu-latest
-    steps:
-      - uses: Dynatrace/dynatrace-operator/.github/workflows/ci.yml@main
-        secrets: inherit
+    if: needs.check-external.outputs.continue
+    uses: Dynatrace/dynatrace-operator/.github/workflows/ci.yml@main
+    secrets: inherit
